@@ -7,12 +7,14 @@ const Expense = require("./models/Expense")
 const api = require('./routes/api')
 const expenses = require("./expenses")
 
-app.use('/', api)
 
 mongoose.connect("mongodb://localhost/Expenses")
 
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
+
+//parser middleware must be setup before the route definitions//
+app.use('/', api)
 
 // console.log("\n\n"+ expenses.length +"\n\n");
 
