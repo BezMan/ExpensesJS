@@ -24,19 +24,49 @@ router.post('/new', function (req, res) {
     group: body.group,
   });
 
-  exp.save(); //save new expense to the DB
-
-
-  //just some helper logs:
-  Expense.find({ name: exp.name }).exec(function (err, expenses) {
-    console.log(expenses);
-    Expense.count({}).exec(function (err, expenses) {
-      console.log(expenses);
-
-      res.send("done")
-    })
+  exp.save().then(function (exp) { //save new expense to the DB, use promise for callback
+    console.log(`You spent ${exp.amount} shekels in ${exp.name} on ${exp.date}`);
+    res.end()
   })
+
 })
+
+//not necessary to define params, just get them from req.body
+router.put('/update', function (req, res) {
+  let group1 = req.body.group1
+  let group2 = req.body.group2
+  Expense.findOneAndUpdate(
+    { group: group1 },
+    { group: group2 },
+    { new: true },
+    function (err, result) {
+      console.log(`changed ${result.name} from group ${group1} to ${group2}`)
+      res.send(`changed ${result.name} from group ${group1} to ${group2}`)
+    })
+})
+
+
+router.get('/expenses/:group', function (req, res) {
+  let group = req.params.group
+  // Expense.find({ group: group }, function (err, expenses) {
+  // console.log(expenses)
+  // })
+  Expense.aggregate([
+    { $match: { group: group } },
+    {
+      $group: {
+        _id: group,
+        total: { $sum: "$amount" }
+      }
+    }
+  ],
+    function (err, result) {
+      console.log("You spent " + result[0].total + " in " + group);
+      res.send("end cycle")
+    })
+    
+})
+
 
 
 module.exports = router
